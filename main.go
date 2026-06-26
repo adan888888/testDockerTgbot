@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"testDockerTgbot/monitor"
 	"testDockerTgbot/rebot"
@@ -14,6 +15,9 @@ import (
 // https://www.bilibili.com/video/BV1HH4y1W7H4/?spm_id_from=333.337.search-card.all.click&vd_source=55f7073cc1049edc8b91cea83217e7b6 视频
 // https://www.fengfengzhidao.com/article/dtyibo4BEG4v2tWkcxXp 文档
 func main() {
+	// 防止 gotd/zap 打出 MTProto 底层 DEBUG
+	zap.ReplaceGlobals(zap.NewNop())
+
 	configPath := "config.yaml"
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
@@ -24,27 +28,28 @@ func main() {
 		log.Fatalf("读取配置失败: %v", err)
 	}
 
+	gin.SetMode(gin.ReleaseMode)
+
 	taskFile := rebot.ResolveTaskFilePath(conf.TaskFilePath())
 	if conf.Monitor.Enabled {
-		log.Printf("群消息监听已开启，命中以下群的消息将写入工作任务文件：%s", taskFile)
+		log.Printf("监听中，仅以下群的消息会显示并写入工作任务：%s", taskFile)
 		for _, g := range conf.MonitorGroups() {
-			log.Printf("  - %s (chatId=%d)", g.Name, g.ChatID)
+			log.Printf("  - %s", g.Name)
 		}
 	}
 
 	if conf.Monitor.Enabled {
 		go func() {
-			log.Println("启动群消息监听...")
 			if err := monitor.Run(conf); err != nil {
 				log.Printf("群消息监听退出: %v", err)
 			}
 		}()
 	}
 
-	log.Println("启动 Telegram 机器人...")
+	log.Println("服务已启动")
 	go rebot.TgRobot(conf)
 
-	r := gin.Default()
+	r := gin.New()
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"code": 0,

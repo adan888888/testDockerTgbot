@@ -7,7 +7,7 @@ require (
 	github.com/go-faster/errors v0.7.1
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/gotd/contrib v0.24.0
-	github.com/gotd/log/logzap v0.1.1
+	github.com/gotd/log v0.1.0
 	github.com/gotd/td v0.159.0
 	github.com/sirupsen/logrus v1.9.3
 	go.uber.org/zap v1.28.0
@@ -37,7 +37,6 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gotd/ige v0.2.2 // indirect
-	github.com/gotd/log v0.1.0 // indirect
 	github.com/gotd/neo v0.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect

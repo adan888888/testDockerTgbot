@@ -1,3 +1,4 @@
 monitor/.venv/
 monitor/session.json
 monitor/*.session-journal
+testDockerTgbot

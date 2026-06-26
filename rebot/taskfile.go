@@ -69,8 +69,6 @@ func recordBotOutgoing(taskFile, botUsername, text string) {
 	}
 	if err := AppendTaskMessage(taskFile, sender, text); err != nil {
 		log.Errorf("写入工作任务文件失败: %v", err)
-	} else {
-		log.Infof("已记录机器人消息: %s", text)
 	}
 }
 

@@ -3,6 +3,7 @@ package monitor
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -10,13 +11,12 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/gotd/contrib/auth/terminal"
-	"github.com/gotd/log/logzap"
+	gotdlog "github.com/gotd/log"
 	"github.com/gotd/td/session"
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/auth"
 	"github.com/gotd/td/telegram/updates"
 	"github.com/gotd/td/tg"
-	"go.uber.org/zap"
 
 	"testDockerTgbot/rebot"
 )
@@ -45,36 +45,15 @@ func Run(conf rebot.Conf) error {
 		return errors.Wrap(err, "create session dir")
 	}
 
-	log, err := zap.NewDevelopment()
-	if err != nil {
-		return err
-	}
-	log = log.WithOptions(zap.IncreaseLevel(zap.InfoLevel))
-	defer log.Sync() //nolint:errcheck
-
-	tdLog := logzap.New(log)
-	for _, g := range groups {
-		log.Info("监听群",
-			zap.String("groupName", g.Name),
-			zap.Int64("groupChatId", g.ChatID),
-		)
-	}
-	log.Info("监听配置",
-		zap.String("taskFile", taskFile),
-		zap.String("session", sessionPath),
-	)
-
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer cancel()
-
+	// gotd 会同步账号下所有群/频道，但底层日志全部丢弃
 	dispatcher := tg.NewUpdateDispatcher()
 	gaps := updates.New(updates.Config{
 		Handler: dispatcher,
-		Logger:  logzap.New(log.Named("gaps")),
+		Logger:  gotdlog.Nop,
 	})
 
 	client := telegram.NewClient(conf.Monitor.ApiID, conf.Monitor.ApiHash, telegram.Options{
-		Logger:         tdLog,
+		Logger:         gotdlog.Nop,
 		SessionStorage: &session.FileStorage{Path: sessionPath},
 		UpdateHandler:  gaps,
 	})
@@ -98,15 +77,10 @@ func Run(conf rebot.Conf) error {
 
 		senderName := formatSender(entities, m)
 		if err := rebot.AppendTaskGroupMessage(taskFile, groupName, senderName, text); err != nil {
-			log.Error("写入工作任务失败", zap.String("file", taskFile), zap.Error(err))
+			log.Printf("写入工作任务失败: %v", err)
 			return nil
 		}
-		log.Info("已写入工作任务",
-			zap.String("file", taskFile),
-			zap.String("group", groupName),
-			zap.String("from", senderName),
-			zap.String("text", text),
-		)
+		log.Printf("[%s] %s: %s", groupName, senderName, text)
 		return nil
 	}
 
@@ -118,6 +92,9 @@ func Run(conf rebot.Conf) error {
 	})
 
 	flow := auth.NewFlow(terminal.OS(), auth.SendCodeOptions{})
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
 
 	return client.Run(ctx, func(ctx context.Context) error {
 		if err := client.Auth().IfNecessary(ctx, flow); err != nil {
@@ -133,21 +110,14 @@ func Run(conf rebot.Conf) error {
 		if err != nil {
 			return err
 		}
-		for _, t := range targets {
-			log.Info("已解析监听群", zap.String("groupName", t.name), zap.Int64("groupChatId", t.chatID))
-		}
 
 		name := self.FirstName
 		if self.Username != "" {
 			name = fmt.Sprintf("%s (@%s)", name, self.Username)
 		}
-		log.Info("个人账号已登录，开始监听群消息", zap.String("user", name), zap.Int("groupCount", len(targets)))
+		log.Printf("个人账号 %s 已就绪，等待群消息...", name)
 
-		return gaps.Run(ctx, client.API(), self.ID, updates.AuthOptions{
-			OnStart: func(ctx context.Context) {
-				log.Info("更新同步已启动")
-			},
-		})
+		return gaps.Run(ctx, client.API(), self.ID, updates.AuthOptions{})
 	})
 }
 

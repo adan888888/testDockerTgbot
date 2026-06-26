@@ -10,6 +10,8 @@ import (
 )
 
 func TgRobot(config Conf) {
+	log.SetLevel(log.WarnLevel)
+
 	var bot, err = tgbotapi.NewBotAPI(config.TgBot.Token)
 	if err != nil {
 		panic(err)
@@ -26,7 +28,7 @@ func TgRobot(config Conf) {
 		taskFile = strings.TrimSpace(os.Getenv("TASK_FILE"))
 	}
 	taskFile = ResolveTaskFilePath(taskFile)
-	log.Infof("机器人 @%s 发出的消息将写入: %s", bot.Self.UserName, taskFile)
+	log.Warnf("机器人 @%s 已启动", bot.Self.UserName)
 
 	// 存储用户的选择
 	userSelections := make(map[int64][]string)
@@ -43,8 +45,6 @@ func TgRobot(config Conf) {
 		//}
 		// 打印收到的消息
 		if update.Message != nil {
-			log.Infof("收到消息==>[userName=%s/From.String=%s/ID=%d] [消息是=%s}] [Chat.ID=%v] ", update.Message.From.UserName, update.Message.From.String(), update.Message.From.ID, update.Message.Text, update.Message.Chat.ID) //如果没有设置userName,From.String()可以取到name
-
 			// monitor 未开启时，由 bot 把配置群内消息写入工作任务
 			if !config.Monitor.Enabled {
 				if groupName, ok := config.MonitoredGroupByChatID(update.Message.Chat.ID); ok && update.Message.Text != "" {
@@ -56,8 +56,6 @@ func TgRobot(config Conf) {
 					}
 					if err := AppendTaskGroupMessage(taskFile, groupName, sender, update.Message.Text); err != nil {
 						log.Errorf("写入工作任务失败: %v", err)
-					} else {
-						log.Infof("已写入工作任务 [%s] %s: %s", groupName, sender, update.Message.Text)
 					}
 				}
 			}
@@ -71,7 +69,6 @@ func TgRobot(config Conf) {
 		}
 
 		if update.CallbackQuery != nil { // 用户点击按钮
-			log.Printf("CallbackQuery received: %+v", update.CallbackQuery)
 			callback := update.CallbackQuery
 			chatID := callback.Message.Chat.ID
 			data := callback.Data
