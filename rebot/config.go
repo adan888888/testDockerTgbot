@@ -48,6 +48,16 @@ func (c Conf) MonitorGroups() []MonitorGroup {
 	return nil
 }
 
+// MonitoredGroupByChatID 根据 Bot API 的 chatId 查找配置的监听群。
+func (c Conf) MonitoredGroupByChatID(chatID int64) (string, bool) {
+	for _, g := range c.MonitorGroups() {
+		if g.ChatID != 0 && g.ChatID == chatID {
+			return g.Name, true
+		}
+	}
+	return "", false
+}
+
 func LoadConf(path string) (Conf, error) {
 	var conf Conf
 	file, err := os.ReadFile(path)

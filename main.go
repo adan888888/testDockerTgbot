@@ -24,6 +24,14 @@ func main() {
 		log.Fatalf("读取配置失败: %v", err)
 	}
 
+	taskFile := rebot.ResolveTaskFilePath(conf.TaskFilePath())
+	if conf.Monitor.Enabled {
+		log.Printf("群消息监听已开启，命中以下群的消息将写入工作任务文件：%s", taskFile)
+		for _, g := range conf.MonitorGroups() {
+			log.Printf("  - %s (chatId=%d)", g.Name, g.ChatID)
+		}
+	}
+
 	if conf.Monitor.Enabled {
 		go func() {
 			log.Println("启动群消息监听...")

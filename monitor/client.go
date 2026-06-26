@@ -49,6 +49,7 @@ func Run(conf rebot.Conf) error {
 	if err != nil {
 		return err
 	}
+	log = log.WithOptions(zap.IncreaseLevel(zap.InfoLevel))
 	defer log.Sync() //nolint:errcheck
 
 	tdLog := logzap.New(log)
@@ -97,10 +98,15 @@ func Run(conf rebot.Conf) error {
 
 		senderName := formatSender(entities, m)
 		if err := rebot.AppendTaskGroupMessage(taskFile, groupName, senderName, text); err != nil {
-			log.Error("写入工作任务文件失败", zap.Error(err))
+			log.Error("写入工作任务失败", zap.String("file", taskFile), zap.Error(err))
 			return nil
 		}
-		log.Info("已记录群消息", zap.String("group", groupName), zap.String("from", senderName), zap.String("text", text))
+		log.Info("已写入工作任务",
+			zap.String("file", taskFile),
+			zap.String("group", groupName),
+			zap.String("from", senderName),
+			zap.String("text", text),
+		)
 		return nil
 	}
 

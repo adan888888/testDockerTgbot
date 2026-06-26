@@ -45,6 +45,23 @@ func TgRobot(config Conf) {
 		if update.Message != nil {
 			log.Infof("收到消息==>[userName=%s/From.String=%s/ID=%d] [消息是=%s}] [Chat.ID=%v] ", update.Message.From.UserName, update.Message.From.String(), update.Message.From.ID, update.Message.Text, update.Message.Chat.ID) //如果没有设置userName,From.String()可以取到name
 
+			// monitor 未开启时，由 bot 把配置群内消息写入工作任务
+			if !config.Monitor.Enabled {
+				if groupName, ok := config.MonitoredGroupByChatID(update.Message.Chat.ID); ok && update.Message.Text != "" {
+					sender := update.Message.From.UserName
+					if sender == "" {
+						sender = update.Message.From.String()
+					} else if !strings.HasPrefix(sender, "@") {
+						sender = "@" + sender
+					}
+					if err := AppendTaskGroupMessage(taskFile, groupName, sender, update.Message.Text); err != nil {
+						log.Errorf("写入工作任务失败: %v", err)
+					} else {
+						log.Infof("已写入工作任务 [%s] %s: %s", groupName, sender, update.Message.Text)
+					}
+				}
+			}
+
 			// 若群里出现该机器人发出的消息（非本进程 Send 触发时），也一并记录
 			if update.Message.From != nil && update.Message.From.IsBot &&
 				strings.EqualFold(update.Message.From.UserName, bot.Self.UserName) &&

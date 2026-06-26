@@ -1,6 +1,7 @@
 system:
   name: "statistics999999"
 
+# 机器人相关配置（我自己创建的机器人）
 tgbot:
   Token: "8779053439:AAFq2hRopsKd9qcpfnXkiF9dD_ibZJ_MifU"
   botUsername: "statistics999999_bot"   # https://t.me/statistics999999_bot
@@ -12,10 +13,11 @@ monitor:
   enabled: true                   # 本地开发 true；Docker 部署建议 false（需终端登录个人账号）
   apiId: 32704558
   apiHash: "ec8da99c65404ac737b582ee2cd9e440"
-  groups:
-    - name: "my_name_hello"
-      chatId: -5402299032
+  groups:                         # 以下群的消息会追加写入 taskFile（默认 ~/Documents/工作任务.txt）
+    - name: "my_name_hello"       # my_name_hello 群
+      chatId: -5402299032        
     - name: "CG技术App开发组"     # 未填 chatId 时启动按群名自动解析
+      chatId: -4102331731
   taskFile: ""                    # 留空则与 tgbot.taskFile 相同
   session: "monitor/session.json"
   phone: ""                       # 可选，首次登录用的手机号（含国际区号）
