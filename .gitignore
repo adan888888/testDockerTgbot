@@ -1,4 +1,10 @@
-monitor/.venv/
-monitor/session.json
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+monitor/*.session
 monitor/*.session-journal
-testDockerTgbot
+monitor/session.json
+
+.idea/

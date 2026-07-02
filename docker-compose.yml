@@ -1,16 +1,19 @@
 #version: '3.8'
-name: MyTgBot #这个名字是docker-compose容器的名字
+name: python-robot
+
 services:
-  #放可执行文件不是目录
   app:
-    build: . #Docker Compose 会在当前目录下查找 Dockerfile 文件，并且依据该文件来构建一个新的镜像。 .表示当前目录
-    #command: ["/app/main"] #它表示在容器启动时，会执行 /app/main 这个可执行文件（dockerfile里面写的有这里可以注释掉）
-    image: tgbot:v1.0 # 指定镜像名称和标签
-    container_name: tgbot # 指定容器名称
+    build: .
+    image: python-robot:v1.0
+    container_name: python-robot
     volumes:
-      - /etc/localtime:/etc/localtime:ro  # 挂载主机的时间配置文件
+      - /etc/localtime:/etc/localtime:ro
       - ~/Documents:/data/documents
+      - ./monitor:/app/monitor
+    # 容器内的环境变量配置文件
     environment:
       - TASK_FILE=/data/documents/工作任务.txt
+      - CONFIG_PATH=/app/config.yaml
     ports:
       - "5000:5000"
+    restart: unless-stopped

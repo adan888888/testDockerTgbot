@@ -1,23 +1,24 @@
 system:
-  name: "statistics999999"
+  name: "监听群消息机器人"
 
-# 机器人相关配置（我自己创建的机器人）
-tgbot:
-  Token: "8779053439:AAFq2hRopsKd9qcpfnXkiF9dD_ibZJ_MifU"
-  botUsername: "statistics999999_bot"   # https://t.me/statistics999999_bot
-  taskFile: ""                    # 留空则写入 ~/Documents/工作任务.txt；Docker 部署见 docker-compose.yml
-
-# 用个人账号监听指定群里的所有消息
+# 个人账号监听群消息（核心功能，靠 apiId/apiHash 登录）
 # apiId/apiHash 从 https://my.telegram.org/apps 获取
 monitor:
-  enabled: true                   # 本地开发 true；Docker 部署建议 false（需终端登录个人账号）
+  enabled: true
   apiId: 32704558
   apiHash: "ec8da99c65404ac737b582ee2cd9e440"
-  groups:                         # 以下群的消息会追加写入 taskFile（默认 ~/Documents/工作任务.txt）
-    - name: "my_name_hello"       # my_name_hello 群
-      chatId: -5402299032        
-    - name: "CG技术App开发组"     # 未填 chatId 时启动按群名自动解析
+  groups:
+    - name: "my_name_hello"
+      chatId: -5402299032
+    - name: "CG技术App开发组"
       chatId: -4102331731
-  taskFile: ""                    # 留空则与 tgbot.taskFile 相同
-  session: "monitor/session.json"
-  phone: ""                       # 可选，首次登录用的手机号（含国际区号）
+  taskFile: ""                    # 留空则写入 ~/Documents/工作任务.txt
+  session: "monitor/session"    # Telethon 会话文件（实际为 monitor/session.session）
+  phone: "+639602270082"                       # 可选，首次登录用的手机号（含国际区号）
+
+# 机器人（可选，与监听群消息无关；仅在你需要 @bot 交互时开启）
+tgbot:
+  enabled: false
+  Token: "8779053439:AAFq2hRopsKd9qcpfnXkiF9dD_ibZJ_MifU"
+  botUsername: "statistics999999_bot"
+  taskFile: ""
